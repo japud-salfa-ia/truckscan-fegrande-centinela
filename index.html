@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard truckscan</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="./dashboard.js" defer></script>
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <header class="dashboard-header">
+        <h1 id="dashboardTitle">Dashboard truckscan</h1>
+        <p id="siteName">FE GRANDE - Centinela</p>
+      </header>
+
+      <main class="dashboard-grid">
+        <section class="main-panel" aria-label="Eventos TruckScan">
+          <form id="filterForm" class="filter-panel" aria-label="Filtros del dashboard">
+            <label class="filter-field filter-date" for="filterFrom">
+              <span>Desde:</span>
+              <input id="filterFrom" name="from" type="date">
+            </label>
+
+            <label class="filter-field" for="filterPlate">
+              <span class="visually-hidden">Patente</span>
+              <select id="filterPlate" name="plate">
+                <option value="">Patente</option>
+              </select>
+            </label>
+
+            <label class="filter-field" for="filterLoad">
+              <span class="visually-hidden">Carga</span>
+              <select id="filterLoad" name="load">
+                <option value="">Carga</option>
+              </select>
+            </label>
+
+            <label class="filter-field" for="filterDirection">
+              <span class="visually-hidden">Dirección</span>
+              <select id="filterDirection" name="direction">
+                <option value="">Dirección</option>
+              </select>
+            </label>
+
+            <label class="filter-field filter-date" for="filterTo">
+              <span>Hasta:</span>
+              <input id="filterTo" name="to" type="date">
+            </label>
+
+            <label class="filter-field" for="filterAlert">
+              <span class="visually-hidden">Alerta</span>
+              <select id="filterAlert" name="alert">
+                <option value="">Alerta</option>
+              </select>
+            </label>
+
+            <button class="filter-button" type="submit">Aplicar filtros</button>
+          </form>
+
+          <div class="dashboard-status">
+            <span id="lastUpdate">Última actualización: Sin dato</span>
+            <span id="recordCount">0 registros</span>
+            <span id="statusMessage" role="status" aria-live="polite"></span>
+          </div>
+
+          <div class="table-scroll" aria-live="polite">
+            <table class="events-table">
+              <colgroup>
+                <col class="col-date">
+                <col class="col-time">
+                <col class="col-plate">
+                <col class="col-load">
+                <col class="col-direction">
+                <col class="col-volume">
+                <col class="col-observation">
+                <col class="col-alert">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Patente</th>
+                  <th>Carga</th>
+                  <th>Dirección</th>
+                  <th>Volumen</th>
+                  <th>Observación</th>
+                  <th>Alerta</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTableBody">
+                <tr>
+                  <td class="empty-cell" colspan="8">Cargando datos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="chart-rail" aria-label="Gráficos del dashboard">
+          <section class="chart-panel chart-panel-line">
+            <h2>Carga acumulada</h2>
+            <div class="chart-wrap">
+              <canvas id="cumulativeChart"></canvas>
+            </div>
+          </section>
+
+          <section class="chart-panel chart-panel-doughnut">
+            <h2>Volumen por camión</h2>
+            <div class="chart-wrap">
+              <canvas id="truckVolumeChart"></canvas>
+            </div>
+          </section>
+
+          <section class="chart-panel chart-panel-bar">
+            <h2>Volumen por día/camión</h2>
+            <div class="chart-wrap">
+              <canvas id="dailyTruckChart"></canvas>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

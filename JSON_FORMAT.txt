@@ -1,0 +1,163 @@
+TruckScan dashboard JSON format
+===============================
+
+Expected file path
+------------------
+
+The dashboard reads this file:
+
+./data/events.json
+
+The JavaScript fetches it with a cache-busting query string:
+
+./data/events.json?t=<current timestamp>
+
+
+Top-level structure
+-------------------
+
+{
+  "metadata": {
+    "dashboard_title": "Dashboard truckscan",
+    "site_name": "FE GRANDE - Centinela",
+    "last_update": "2026-05-03T12:00:00-04:00",
+    "data_mode": "manual_demo"
+  },
+  "events": []
+}
+
+
+Metadata fields
+---------------
+
+dashboard_title:
+  Text shown as the main dashboard title.
+
+site_name:
+  Text shown as the subtitle under the main title.
+
+last_update:
+  ISO-like timestamp shown in the dashboard status area.
+
+data_mode:
+  Free text describing the data source. For this temporary static demo, use
+  "manual_demo" or another non-sensitive description.
+
+
+Event fields
+------------
+
+event_id:
+  Optional unique demo identifier.
+
+date:
+  Event date in YYYY-MM-DD format. Used by the table, date filters, line chart,
+  and daily bar chart.
+
+time:
+  Event time in HH:MM:SS format. Used by the table and cumulative line chart.
+
+plate:
+  Anonymized truck plate. Used by the table, Patente filter, doughnut chart, and
+  daily bar chart.
+
+truck_code:
+  Optional internal demo code for the truck. It is not displayed by the current
+  table.
+
+load:
+  Load description, for example "Arena" or "Vacío". Used by the table and Carga
+  filter.
+
+direction:
+  Direction description, for example "Ida" or "Vuelta". Used by the table and
+  Dirección filter.
+
+volume_m3:
+  Numeric volume in cubic meters. Used by the table and all charts.
+
+observation:
+  Optional note shown in the Observación column. Use "-" when there is no note.
+
+alert_label:
+  Human-readable alert text shown in the Alerta column for warning, error, and
+  unknown states. OK rows are shown mainly through the green alert color.
+
+alert_level:
+  Machine-readable alert level used for filter logic and alert coloring.
+
+
+Allowed alert_level values
+--------------------------
+
+ok:
+  Green alert cell.
+
+warning:
+  Yellow alert cell.
+
+error:
+  Red alert cell.
+
+unknown:
+  Gray alert cell.
+
+Missing or invalid alert levels are treated as "unknown".
+
+
+Example event
+-------------
+
+{
+  "event_id": "demo_001",
+  "date": "2026-04-01",
+  "time": "09:31:04",
+  "plate": "AAAA11",
+  "truck_code": "01",
+  "load": "Arena",
+  "direction": "Ida",
+  "volume_m3": 17.58,
+  "observation": "-",
+  "alert_label": "OK",
+  "alert_level": "ok"
+}
+
+
+How the dashboard uses the data
+-------------------------------
+
+Table columns:
+  Fecha maps to date.
+  Hora maps to time.
+  Patente maps to plate.
+  Carga maps to load.
+  Dirección maps to direction.
+  Volumen maps to volume_m3.
+  Observación maps to observation.
+  Alerta maps to alert_label and alert_level.
+
+Filters:
+  Desde and Hasta compare against date.
+  Patente compares against plate.
+  Carga compares against load.
+  Dirección compares against direction.
+  Alerta compares against alert_level.
+
+Charts:
+  Carga acumulada sorts filtered events by date/time and accumulates volume_m3.
+  Volumen por camión groups filtered events by plate and sums volume_m3.
+  Volumen por día/camión groups filtered events by date and plate, then sums
+  volume_m3 for each stacked bar segment.
+
+
+Fallback behavior
+-----------------
+
+If events is empty, the table shows an empty-state message and charts render
+without operational values.
+
+If optional text fields are missing, the dashboard displays fallback text such
+as "-", "Sin dato", or "Desconocido".
+
+If volume_m3 is missing or invalid, the table displays "Sin dato" and charts
+treat the value as 0.
