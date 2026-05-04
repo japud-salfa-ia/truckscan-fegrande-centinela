@@ -17,7 +17,7 @@
       "volume_m3": 16.59,
       "observation": "Carga activa inferior a 20 m³; posible carga parcial.",
       "alert_label": "REVISAR",
-      "alert_level": "warning"
+      "alert_level": "error"
     },
     {
       "event_id": "20260420_192100_603030",
@@ -95,7 +95,7 @@
       "volume_m3": 15.44,
       "observation": "Carga activa inferior a 20 m³; posible carga parcial.",
       "alert_label": "REVISAR",
-      "alert_level": "warning"
+      "alert_level": "error"
     },
     {
       "event_id": "20260428_162025_061269",
@@ -108,7 +108,7 @@
       "volume_m3": 1.361,
       "observation": "Clasificado como vacío, pero con carga residual estimada.",
       "alert_label": "REVISAR",
-      "alert_level": "warning"
+      "alert_level": "error"
     },
     {
       "event_id": "20260428_162449_451454",
@@ -121,7 +121,7 @@
       "volume_m3": 16.764,
       "observation": "Carga activa inferior a 20 m³; posible carga parcial.",
       "alert_label": "REVISAR",
-      "alert_level": "warning"
+      "alert_level": "error"
     },
     {
       "event_id": "20260428_163310_175805",
@@ -147,7 +147,7 @@
       "volume_m3": 16.785,
       "observation": "Carga activa inferior a 20 m³; posible carga parcial.",
       "alert_label": "REVISAR",
-      "alert_level": "warning"
+      "alert_level": "error"
     },
     {
       "event_id": "20260430_152057_044297",
