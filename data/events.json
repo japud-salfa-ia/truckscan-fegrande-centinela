@@ -1,0 +1,49 @@
+﻿{
+  "metadata": {
+    "dashboard_title": "Dashboard truckscan",
+    "site_name": "FE GRANDE - Centinela",
+    "last_update": "2026-05-03T12:00:00-04:00",
+    "data_mode": "manual_demo"
+  },
+  "events": [
+    {
+      "event_id": "demo_001",
+      "date": "2026-05-01",
+      "time": "09:15:00",
+      "plate": "DEMO01",
+      "truck_code": "01",
+      "load": "Arena",
+      "direction": "Ida",
+      "volume_m3": 18.4,
+      "observation": "-",
+      "alert_label": "OK",
+      "alert_level": "ok"
+    },
+    {
+      "event_id": "demo_002",
+      "date": "2026-05-01",
+      "time": "10:40:00",
+      "plate": "DEMO02",
+      "truck_code": "02",
+      "load": "Vacío",
+      "direction": "Vuelta",
+      "volume_m3": 1.2,
+      "observation": "No vaciado por completo",
+      "alert_label": "Advertencia",
+      "alert_level": "warning"
+    },
+    {
+      "event_id": "demo_003",
+      "date": "2026-05-02",
+      "time": "08:55:00",
+      "plate": "DEMO03",
+      "truck_code": "03",
+      "load": "Arena",
+      "direction": "Ida",
+      "volume_m3": 7.9,
+      "observation": "Carga baja",
+      "alert_label": "Revisar",
+      "alert_level": "error"
+    }
+  ]
+}

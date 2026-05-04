@@ -1,0 +1,38 @@
+﻿# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Local environment files
+.env
+.env.*
+venv/
+.venv/
+node_modules/
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+credentials.json
+token.json
+*service-account*.json
+
+# Python cache, in case local tools create it
+__pycache__/
+*.pyc
+
+# Keep dashboard demo data
+!data/
+!data/events.json
+
+# Keep documentation and references
+!docs/
+!assets/
