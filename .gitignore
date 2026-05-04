@@ -29,10 +29,21 @@ token.json
 __pycache__/
 *.pyc
 
-# Keep dashboard demo data
+# Local project instructions and references not needed for GitHub Pages
+AGENTS.md
+docs/
+assets/
+Dashboard_example.png
+truckscan_dashboard_github_pages_context_for_codex.md
+.tmp-*/
+tmp/
+temp/
+
+# Keep only the static dashboard files needed by GitHub Pages
+!index.html
+!styles.css
+!dashboard.js
+!README.md
+!JSON_FORMAT.txt
 !data/
 !data/events.json
-
-# Keep documentation and references
-!docs/
-!assets/
