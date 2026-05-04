@@ -93,8 +93,8 @@ async function loadDashboardData(options = {}) {
 }
 
 function applyMetadata() {
-  const title = fallbackText(state.metadata.dashboard_title, "Dashboard truckscan");
-  const siteName = fallbackText(state.metadata.site_name, "FE GRANDE - Centinela");
+  const title = fallbackText(state.metadata.dashboard_title, "Truckscan");
+  const siteName = fallbackText(state.metadata.site_name, "Fegrande - Centinela");
 
   els.dashboardTitle.textContent = title;
   els.siteName.textContent = siteName;

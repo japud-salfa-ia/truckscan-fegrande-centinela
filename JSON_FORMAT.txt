@@ -18,8 +18,8 @@ Top-level structure
 
 {
   "metadata": {
-    "dashboard_title": "Dashboard truckscan",
-    "site_name": "FE GRANDE - Centinela",
+    "dashboard_title": "Truckscan",
+    "site_name": "Fegrande - Centinela",
     "last_update": "2026-05-03T12:00:00-04:00",
     "data_mode": "manual_demo"
   },
