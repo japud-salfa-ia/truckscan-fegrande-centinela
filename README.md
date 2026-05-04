@@ -30,6 +30,8 @@ data/events.json
 
 Keep the JSON valid. The dashboard fetches the file with a cache-busting query string, so updates are visible after GitHub Pages redeploys and the browser refreshes or the auto-refresh runs.
 
+The `Filas` selector only limits how many rows are shown in the table. The charts still use all events that match the other selected filters.
+
 Typical update workflow:
 
 ```bash

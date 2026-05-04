@@ -39,6 +39,7 @@ function cacheElements() {
   els.filterLoad = document.querySelector("#filterLoad");
   els.filterDirection = document.querySelector("#filterDirection");
   els.filterAlert = document.querySelector("#filterAlert");
+  els.filterRowLimit = document.querySelector("#filterRowLimit");
   els.lastUpdate = document.querySelector("#lastUpdate");
   els.recordCount = document.querySelector("#recordCount");
   els.statusMessage = document.querySelector("#statusMessage");
@@ -53,6 +54,8 @@ function bindEvents() {
     event.preventDefault();
     applyFilters();
   });
+
+  window.addEventListener("resize", debounce(resizeCharts, 120));
 
   [els.filterFrom, els.filterTo].forEach((input) => {
     input.addEventListener("input", syncDateInputClasses);
@@ -114,6 +117,7 @@ function populateFilters(previousFilters) {
     previousFilters.direction
   );
   setSelectOptions(els.filterAlert, ALERT_ORDER, "Alerta", previousFilters.alert, ALERT_LABELS);
+  els.filterRowLimit.value = previousFilters.rowLimit || "";
 
   els.filterFrom.value = previousFilters.from || "";
   els.filterTo.value = previousFilters.to || "";
@@ -156,8 +160,9 @@ function applyFilters() {
   });
 
   state.filteredEvents = filteredEvents;
-  renderRecordCount(filteredEvents.length, state.events.length);
-  renderTable(filteredEvents);
+  const tableEvents = applyRowLimit(filteredEvents, filters.rowLimit);
+  renderRecordCount(tableEvents.length, filteredEvents.length, state.events.length);
+  renderTable(tableEvents, filteredEvents.length);
   renderCharts(filteredEvents);
 }
 
@@ -168,7 +173,8 @@ function getFilterValues() {
     plate: els.filterPlate ? els.filterPlate.value : "",
     load: els.filterLoad ? els.filterLoad.value : "",
     direction: els.filterDirection ? els.filterDirection.value : "",
-    alert: els.filterAlert ? els.filterAlert.value : ""
+    alert: els.filterAlert ? els.filterAlert.value : "",
+    rowLimit: els.filterRowLimit ? els.filterRowLimit.value : ""
   };
 }
 
@@ -178,16 +184,35 @@ function syncDateInputClasses() {
   });
 }
 
-function renderRecordCount(filteredCount, totalCount) {
+function applyRowLimit(events, rowLimit) {
+  const limit = Number(rowLimit);
+  if (!Number.isInteger(limit) || limit <= 0) {
+    return getSortedEvents(events);
+  }
+  return getSortedEvents(events).slice(0, limit);
+}
+
+function renderRecordCount(visibleCount, filteredCount, totalCount) {
+  if (visibleCount < filteredCount) {
+    els.recordCount.textContent =
+      visibleCount +
+      " de " +
+      filteredCount +
+      " " +
+      pluralize(filteredCount, "registro filtrado", "registros filtrados");
+    return;
+  }
+
   if (filteredCount === totalCount) {
     els.recordCount.textContent = filteredCount + " " + pluralize(filteredCount, "registro", "registros");
     return;
   }
+
   els.recordCount.textContent =
     filteredCount + " de " + totalCount + " " + pluralize(totalCount, "registro", "registros");
 }
 
-function renderTable(events) {
+function renderTable(events, filteredCount) {
   els.tableBody.replaceChildren();
 
   if (!events.length) {
@@ -195,7 +220,7 @@ function renderTable(events) {
     const cell = document.createElement("td");
     cell.className = "empty-cell";
     cell.colSpan = 8;
-    cell.textContent = state.events.length
+    cell.textContent = filteredCount || state.events.length
       ? "Sin resultados para los filtros seleccionados."
       : "Sin eventos disponibles en data/events.json.";
     row.appendChild(cell);
@@ -203,24 +228,26 @@ function renderTable(events) {
     return;
   }
 
-  getSortedEvents(events).forEach((event) => {
+  events.forEach((event) => {
     const row = document.createElement("tr");
 
     const dateCell = document.createElement("td");
+    dateCell.dataset.label = "Fecha";
     const datePill = document.createElement("span");
     datePill.className = "date-pill";
     datePill.textContent = formatDisplayDate(event.date);
     dateCell.appendChild(datePill);
     row.appendChild(dateCell);
 
-    row.appendChild(createTextCell(formatDisplayTime(event.time)));
-    row.appendChild(createTextCell(event.plate));
-    row.appendChild(createTextCell(event.load));
-    row.appendChild(createTextCell(event.direction));
-    row.appendChild(createTextCell(formatVolume(event.volume_m3)));
-    row.appendChild(createTextCell(event.observation));
+    row.appendChild(createTextCell(formatDisplayTime(event.time), "Hora"));
+    row.appendChild(createTextCell(event.plate, "Patente"));
+    row.appendChild(createTextCell(event.load, "Carga"));
+    row.appendChild(createTextCell(event.direction, "Dirección"));
+    row.appendChild(createTextCell(formatVolume(event.volume_m3), "Volumen"));
+    row.appendChild(createTextCell(event.observation, "Observación"));
 
     const alertCell = document.createElement("td");
+    alertCell.dataset.label = "Alerta";
     alertCell.className = "alert-cell alert-" + event.alert_level;
     alertCell.title = event.alert_label;
     alertCell.setAttribute("aria-label", event.alert_label);
@@ -231,8 +258,9 @@ function renderTable(events) {
   });
 }
 
-function createTextCell(text) {
+function createTextCell(text, label) {
   const cell = document.createElement("td");
+  cell.dataset.label = label;
   cell.textContent = text;
   return cell;
 }
@@ -257,6 +285,14 @@ function destroyCharts() {
     }
   });
   state.charts = {};
+}
+
+function resizeCharts() {
+  Object.values(state.charts).forEach((chart) => {
+    if (chart) {
+      chart.resize();
+    }
+  });
 }
 
 function createCumulativeChart(events) {
@@ -597,6 +633,14 @@ function colorAt(index) {
 
 function pluralize(count, singular, plural) {
   return count === 1 ? singular : plural;
+}
+
+function debounce(callback, waitMs) {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => callback(...args), waitMs);
+  };
 }
 
 function setStatus(message, type) {

@@ -142,6 +142,8 @@ Filters:
   Carga compares against load.
   Dirección compares against direction.
   Alerta compares against alert_level.
+  Filas limits only the number of table rows displayed. It does not change the
+  data used by charts.
 
 Charts:
   Carga acumulada sorts filtered events by date/time and accumulates volume_m3.
