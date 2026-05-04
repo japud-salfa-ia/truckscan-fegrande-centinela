@@ -108,7 +108,7 @@
       "volume_m3": 1.361,
       "observation": "Clasificado como vacío, pero con carga residual estimada.",
       "alert_label": "REVISAR",
-      "alert_level": "error"
+      "alert_level": "warning"
     },
     {
       "event_id": "20260428_162449_451454",
