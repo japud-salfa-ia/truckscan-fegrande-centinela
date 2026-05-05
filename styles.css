@@ -122,7 +122,7 @@ select:focus-visible {
 }
 
 .dashboard-header h1 {
-  margin: 12px 0 0;
+  margin: 0;
   color: #ffffff;
   font-size: clamp(42px, 6vw, 82px);
   font-weight: 850;
@@ -210,7 +210,7 @@ select:focus-visible {
 .kpi-card {
   display: flex;
   min-width: 0;
-  min-height: 232px;
+  min-height: 208px;
   padding: 22px;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.94);
@@ -254,20 +254,12 @@ select:focus-visible {
   letter-spacing: -0.035em;
 }
 
-.kpi-card small {
-  display: block;
-  margin-top: 9px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 650;
-  line-height: 1.35;
-}
 
 .kpi-breakdown {
   display: grid;
   gap: 8px;
   margin: auto 0 0;
-  padding: 14px 0 0;
+  padding: 12px 0 0;
 }
 
 .kpi-breakdown div {
