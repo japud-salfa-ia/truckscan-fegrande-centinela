@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
     <title>Truckscan</title>
     <link rel="stylesheet" href="./styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
@@ -10,56 +11,101 @@
   </head>
   <body>
     <div class="dashboard-shell">
-      <header class="dashboard-header">
-        <h1 id="dashboardTitle">Truckscan</h1>
-        <p id="siteName">Fegrande - Centinela</p>
+      <header class="dashboard-header" aria-label="Encabezado del dashboard">
+        <div class="header-copy">
+          <span class="eyebrow">Sistema de monitoreo volumétrico</span>
+          <h1 id="dashboardTitle">Truckscan</h1>
+          <p id="siteName">Fegrande - Centinela</p>
+        </div>
+
+        <div class="header-actions" aria-label="Acciones rápidas">
+          <button id="refreshData" class="ghost-button" type="button">Actualizar datos</button>
+          <span class="live-pill" aria-label="Actualización automática activa">
+            <span class="live-dot" aria-hidden="true"></span>
+            Auto-refresh 30 s
+          </span>
+        </div>
       </header>
 
-      <main class="dashboard-grid">
-        <section class="main-panel" aria-label="Eventos TruckScan">
+      <main>
+        <section class="kpi-grid" aria-label="Resumen operacional">
+          <article class="kpi-card">
+            <span class="kpi-label">Volumen total</span>
+            <strong id="kpiTotalVolume">0 m³</strong>
+            <small>Eventos filtrados</small>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Registros</span>
+            <strong id="kpiEventCount">0</strong>
+            <small>Coincidencias visibles</small>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Alertas</span>
+            <strong id="kpiAlertCount">0</strong>
+            <small>Estados no OK</small>
+          </article>
+
+          <article class="kpi-card">
+            <span class="kpi-label">Promedio</span>
+            <strong id="kpiAvgVolume">0 m³</strong>
+            <small>Volumen por evento</small>
+          </article>
+        </section>
+
+        <section class="control-card" aria-label="Filtros del dashboard">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-kicker">Control de vista</span>
+              <h2>Filtros de operación</h2>
+            </div>
+            <p>Los gráficos se recalculan con los filtros activos. El límite de filas afecta solo la tabla.</p>
+          </div>
+
           <form id="filterForm" class="filter-panel" aria-label="Filtros del dashboard">
-            <label class="filter-field filter-date" for="filterFrom">
-              <span>Desde:</span>
+            <label class="filter-field" for="filterFrom">
+              <span>Desde</span>
               <input id="filterFrom" name="from" type="date">
             </label>
 
+            <label class="filter-field" for="filterTo">
+              <span>Hasta</span>
+              <input id="filterTo" name="to" type="date">
+            </label>
+
             <label class="filter-field" for="filterPlate">
-              <span class="visually-hidden">Patente</span>
+              <span>Patente</span>
               <select id="filterPlate" name="plate">
-                <option value="">Patente</option>
+                <option value="">Todas</option>
               </select>
             </label>
 
             <label class="filter-field" for="filterLoad">
-              <span class="visually-hidden">Carga</span>
+              <span>Carga</span>
               <select id="filterLoad" name="load">
-                <option value="">Carga</option>
+                <option value="">Todas</option>
               </select>
             </label>
 
             <label class="filter-field" for="filterDirection">
-              <span class="visually-hidden">Dirección</span>
+              <span>Dirección</span>
               <select id="filterDirection" name="direction">
-                <option value="">Dirección</option>
+                <option value="">Todas</option>
               </select>
             </label>
 
-            <label class="filter-field filter-date" for="filterTo">
-              <span>Hasta:</span>
-              <input id="filterTo" name="to" type="date">
-            </label>
-
             <label class="filter-field" for="filterAlert">
-              <span class="visually-hidden">Alerta</span>
+              <span>Alerta</span>
               <select id="filterAlert" name="alert">
-                <option value="">Alerta</option>
+                <option value="">Todas</option>
               </select>
             </label>
 
             <label class="filter-field" for="filterRowLimit">
-              <span class="visually-hidden">Filas</span>
+              <span>Filas tabla</span>
               <select id="filterRowLimit" name="rowLimit">
-                <option value="">Filas</option>
+                <option value="">Todas</option>
                 <option value="5">5 filas</option>
                 <option value="10">10 filas</option>
                 <option value="25">25 filas</option>
@@ -67,70 +113,100 @@
               </select>
             </label>
 
-            <button class="filter-button" type="submit">Aplicar filtros</button>
+            <div class="filter-actions">
+              <button class="filter-button" type="submit">Aplicar filtros</button>
+              <button id="resetFilters" class="secondary-button" type="button">Limpiar</button>
+            </div>
           </form>
-
-          <div class="dashboard-status">
-            <span id="lastUpdate">Última actualización: Sin dato</span>
-            <span id="recordCount">0 registros</span>
-            <span id="statusMessage" role="status" aria-live="polite"></span>
-          </div>
-
-          <div class="table-scroll" aria-live="polite">
-            <table class="events-table">
-              <colgroup>
-                <col class="col-date">
-                <col class="col-time">
-                <col class="col-plate">
-                <col class="col-load">
-                <col class="col-direction">
-                <col class="col-volume">
-                <col class="col-observation">
-                <col class="col-alert">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Hora</th>
-                  <th>Patente</th>
-                  <th>Carga</th>
-                  <th>Dirección</th>
-                  <th>Volumen</th>
-                  <th>Observación</th>
-                  <th>Alerta</th>
-                </tr>
-              </thead>
-              <tbody id="eventsTableBody">
-                <tr>
-                  <td class="empty-cell" colspan="8">Cargando datos...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </section>
 
-        <aside class="chart-rail" aria-label="Gráficos del dashboard">
-          <section class="chart-panel chart-panel-line">
-            <h2>Carga acumulada</h2>
-            <div class="chart-wrap">
-              <canvas id="cumulativeChart"></canvas>
+        <div class="dashboard-status" aria-label="Estado de datos">
+          <span id="lastUpdate">Última actualización: Sin dato</span>
+          <span id="recordCount">0 registros</span>
+          <span id="statusMessage" role="status" aria-live="polite"></span>
+        </div>
+
+        <section class="content-grid">
+          <section class="table-card" aria-label="Eventos TruckScan">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">Registro operacional</span>
+                <h2>Eventos detectados</h2>
+              </div>
+              <p>Lecturas normalizadas desde <code>data/events.json</code>.</p>
+            </div>
+
+            <div class="table-scroll" aria-live="polite">
+              <table class="events-table">
+                <colgroup>
+                  <col class="col-date">
+                  <col class="col-time">
+                  <col class="col-plate">
+                  <col class="col-load">
+                  <col class="col-direction">
+                  <col class="col-volume">
+                  <col class="col-observation">
+                  <col class="col-alert">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Patente</th>
+                    <th>Carga</th>
+                    <th>Dirección</th>
+                    <th>Volumen</th>
+                    <th>Observación</th>
+                    <th>Alerta</th>
+                  </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                  <tr>
+                    <td class="empty-cell" colspan="8">Cargando datos...</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
-          <section class="chart-panel chart-panel-doughnut">
-            <h2>Volumen por camión</h2>
-            <div class="chart-wrap">
-              <canvas id="truckVolumeChart"></canvas>
-            </div>
-          </section>
+          <aside class="chart-column" aria-label="Gráficos del dashboard">
+            <section class="chart-panel chart-panel-line">
+              <div class="chart-title-row">
+                <div>
+                  <span class="section-kicker">Tendencia</span>
+                  <h2>Carga acumulada</h2>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="cumulativeChart"></canvas>
+              </div>
+            </section>
 
-          <section class="chart-panel chart-panel-bar">
-            <h2>Volumen por día/camión</h2>
-            <div class="chart-wrap">
-              <canvas id="dailyTruckChart"></canvas>
-            </div>
-          </section>
-        </aside>
+            <section class="chart-panel chart-panel-doughnut">
+              <div class="chart-title-row">
+                <div>
+                  <span class="section-kicker">Distribución</span>
+                  <h2>Volumen por camión</h2>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="truckVolumeChart"></canvas>
+              </div>
+            </section>
+
+            <section class="chart-panel chart-panel-bar">
+              <div class="chart-title-row">
+                <div>
+                  <span class="section-kicker">Producción diaria</span>
+                  <h2>Volumen por día/camión</h2>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="dailyTruckChart"></canvas>
+              </div>
+            </section>
+          </aside>
+        </section>
       </main>
     </div>
   </body>
