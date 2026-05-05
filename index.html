@@ -31,26 +31,78 @@
         <section class="kpi-grid" aria-label="Resumen operacional">
           <article class="kpi-card">
             <span class="kpi-label">Volumen total</span>
-            <strong id="kpiTotalVolume">0 m³</strong>
-            <small>Eventos filtrados</small>
+            <div class="kpi-primary">
+              <span>Agregado total</span>
+              <strong id="kpiVolumeTotal">0 m³</strong>
+            </div>
+            <small>Neto operacional: ida suma, vuelta resta.</small>
+            <dl class="kpi-breakdown">
+              <div>
+                <dt>Ida</dt>
+                <dd id="kpiVolumeIn">0 m³</dd>
+              </div>
+              <div>
+                <dt>Vuelta</dt>
+                <dd id="kpiVolumeOut">0 m³</dd>
+              </div>
+            </dl>
           </article>
 
           <article class="kpi-card">
             <span class="kpi-label">Registros</span>
-            <strong id="kpiEventCount">0</strong>
-            <small>Coincidencias visibles</small>
+            <div class="kpi-primary">
+              <span>Agregado total</span>
+              <strong id="kpiRecordsTotal">0</strong>
+            </div>
+            <small>Eventos detectados en la vista filtrada.</small>
+            <dl class="kpi-breakdown">
+              <div>
+                <dt>Ida</dt>
+                <dd id="kpiRecordsIn">0</dd>
+              </div>
+              <div>
+                <dt>Vuelta</dt>
+                <dd id="kpiRecordsOut">0</dd>
+              </div>
+            </dl>
           </article>
 
           <article class="kpi-card">
             <span class="kpi-label">Alertas</span>
-            <strong id="kpiAlertCount">0</strong>
-            <small>Estados no OK</small>
+            <div class="kpi-primary">
+              <span>Agregado total</span>
+              <strong id="kpiAlertsTotal">0</strong>
+            </div>
+            <small>Estados distintos de OK.</small>
+            <dl class="kpi-breakdown">
+              <div>
+                <dt>Ida</dt>
+                <dd id="kpiAlertsIn">0</dd>
+              </div>
+              <div>
+                <dt>Vuelta</dt>
+                <dd id="kpiAlertsOut">0</dd>
+              </div>
+            </dl>
           </article>
 
           <article class="kpi-card">
             <span class="kpi-label">Promedio</span>
-            <strong id="kpiAvgVolume">0 m³</strong>
-            <small>Volumen por evento</small>
+            <div class="kpi-primary kpi-primary-muted">
+              <span>Sin agregado total</span>
+              <strong>Por sentido</strong>
+            </div>
+            <small>Promedio independiente para ida y vuelta.</small>
+            <dl class="kpi-breakdown">
+              <div>
+                <dt>Ida</dt>
+                <dd id="kpiAvgIn">0 m³</dd>
+              </div>
+              <div>
+                <dt>Vuelta</dt>
+                <dd id="kpiAvgOut">0 m³</dd>
+              </div>
+            </dl>
           </article>
         </section>
 
@@ -174,7 +226,7 @@
               <div class="chart-title-row">
                 <div>
                   <span class="section-kicker">Tendencia</span>
-                  <h2>Carga acumulada</h2>
+                  <h2>Carga acumulada neta</h2>
                 </div>
               </div>
               <div class="chart-wrap">
@@ -186,7 +238,7 @@
               <div class="chart-title-row">
                 <div>
                   <span class="section-kicker">Distribución</span>
-                  <h2>Volumen por camión</h2>
+                  <h2>Volumen neto por camión</h2>
                 </div>
               </div>
               <div class="chart-wrap">
@@ -198,7 +250,7 @@
               <div class="chart-title-row">
                 <div>
                   <span class="section-kicker">Producción diaria</span>
-                  <h2>Volumen por día/camión</h2>
+                  <h2>Volumen neto por día/camión</h2>
                 </div>
               </div>
               <div class="chart-wrap">

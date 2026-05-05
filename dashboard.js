@@ -47,10 +47,17 @@ function cacheElements() {
   els.recordCount = document.querySelector("#recordCount");
   els.statusMessage = document.querySelector("#statusMessage");
   els.tableBody = document.querySelector("#eventsTableBody");
-  els.kpiTotalVolume = document.querySelector("#kpiTotalVolume");
-  els.kpiEventCount = document.querySelector("#kpiEventCount");
-  els.kpiAlertCount = document.querySelector("#kpiAlertCount");
-  els.kpiAvgVolume = document.querySelector("#kpiAvgVolume");
+  els.kpiVolumeTotal = document.querySelector("#kpiVolumeTotal");
+  els.kpiVolumeIn = document.querySelector("#kpiVolumeIn");
+  els.kpiVolumeOut = document.querySelector("#kpiVolumeOut");
+  els.kpiRecordsTotal = document.querySelector("#kpiRecordsTotal");
+  els.kpiRecordsIn = document.querySelector("#kpiRecordsIn");
+  els.kpiRecordsOut = document.querySelector("#kpiRecordsOut");
+  els.kpiAlertsTotal = document.querySelector("#kpiAlertsTotal");
+  els.kpiAlertsIn = document.querySelector("#kpiAlertsIn");
+  els.kpiAlertsOut = document.querySelector("#kpiAlertsOut");
+  els.kpiAvgIn = document.querySelector("#kpiAvgIn");
+  els.kpiAvgOut = document.querySelector("#kpiAvgOut");
   els.cumulativeChart = document.querySelector("#cumulativeChart");
   els.truckVolumeChart = document.querySelector("#truckVolumeChart");
   els.dailyTruckChart = document.querySelector("#dailyTruckChart");
@@ -230,14 +237,57 @@ function applyRowLimit(events, rowLimit) {
 }
 
 function renderKpis(events) {
-  const totalVolume = events.reduce((sum, event) => sum + chartVolume(event), 0);
-  const alertCount = events.filter((event) => event.alert_level !== "ok").length;
-  const avgVolume = events.length ? totalVolume / events.length : 0;
+  const summary = summarizeEvents(events);
 
-  els.kpiTotalVolume.textContent = formatVolumeCompact(totalVolume);
-  els.kpiEventCount.textContent = formatInteger(events.length);
-  els.kpiAlertCount.textContent = formatInteger(alertCount);
-  els.kpiAvgVolume.textContent = formatVolumeCompact(avgVolume);
+  els.kpiVolumeTotal.textContent = formatSignedVolume(summary.volume.totalNet);
+  els.kpiVolumeIn.textContent = formatVolumeCompact(summary.volume.ida);
+  els.kpiVolumeOut.textContent = formatVolumeCompact(summary.volume.vuelta);
+
+  els.kpiRecordsTotal.textContent = formatInteger(summary.records.total);
+  els.kpiRecordsIn.textContent = formatInteger(summary.records.ida);
+  els.kpiRecordsOut.textContent = formatInteger(summary.records.vuelta);
+
+  els.kpiAlertsTotal.textContent = formatInteger(summary.alerts.total);
+  els.kpiAlertsIn.textContent = formatInteger(summary.alerts.ida);
+  els.kpiAlertsOut.textContent = formatInteger(summary.alerts.vuelta);
+
+  els.kpiAvgIn.textContent = formatVolumeCompact(summary.averages.ida);
+  els.kpiAvgOut.textContent = formatVolumeCompact(summary.averages.vuelta);
+}
+
+function summarizeEvents(events) {
+  const idaEvents = events.filter(isIdaDirection);
+  const vueltaEvents = events.filter(isVueltaDirection);
+
+  const volumeIda = idaEvents.reduce((sum, event) => sum + rawVolume(event), 0);
+  const volumeVuelta = vueltaEvents.reduce((sum, event) => sum + rawVolume(event), 0);
+  const volumeTotalNet = events.reduce((sum, event) => sum + signedVolume(event), 0);
+
+  const alertEvents = events.filter(isAlertEvent);
+  const alertIdaEvents = idaEvents.filter(isAlertEvent);
+  const alertVueltaEvents = vueltaEvents.filter(isAlertEvent);
+
+  return {
+    volume: {
+      totalNet: volumeTotalNet,
+      ida: volumeIda,
+      vuelta: volumeVuelta
+    },
+    records: {
+      total: events.length,
+      ida: idaEvents.length,
+      vuelta: vueltaEvents.length
+    },
+    alerts: {
+      total: alertEvents.length,
+      ida: alertIdaEvents.length,
+      vuelta: alertVueltaEvents.length
+    },
+    averages: {
+      ida: idaEvents.length ? volumeIda / idaEvents.length : 0,
+      vuelta: vueltaEvents.length ? volumeVuelta / vueltaEvents.length : 0
+    }
+  };
 }
 
 function renderRecordCount(visibleCount, filteredCount, totalCount) {
@@ -364,16 +414,18 @@ function createCumulativeChart(events) {
   let cumulative = 0;
   const labels = [];
   const values = [];
+  const tooltipLabels = [];
 
   sortedEvents.forEach((event) => {
-    cumulative += chartVolume(event);
-    labels.push(shortDateTime(event));
+    cumulative += signedVolume(event);
+    labels.push(event.date ? formatDisplayDate(event.date) : "Sin fecha");
+    tooltipLabels.push(fullDateTime(event));
     values.push(roundTwo(cumulative));
   });
 
   const chartData = labels.length
-    ? { labels, values }
-    : { labels: ["Sin datos"], values: [0] };
+    ? { labels, values, tooltipLabels }
+    : { labels: ["Sin datos"], values: [0], tooltipLabels: ["Sin datos"] };
 
   return new Chart(els.cumulativeChart, {
     type: "line",
@@ -381,8 +433,9 @@ function createCumulativeChart(events) {
       labels: chartData.labels,
       datasets: [
         {
-          label: "Carga acumulada",
+          label: "Carga acumulada neta",
           data: chartData.values,
+          eventLabels: chartData.tooltipLabels,
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.12)",
           pointBackgroundColor: "#2563eb",
@@ -401,9 +454,12 @@ function createCumulativeChart(events) {
 }
 
 function createTruckVolumeChart(events) {
-  const totals = groupTotals(events, (event) => event.plate);
-  const labels = Object.keys(totals).sort(collator.compare);
-  const values = labels.map((label) => roundTwo(totals[label]));
+  const totals = groupTotals(events, (event) => event.plate, signedVolume);
+  const allLabels = Object.keys(totals).sort(collator.compare);
+  const positiveLabels = allLabels.filter((label) => totals[label] > 0);
+  const labels = positiveLabels.length ? positiveLabels : allLabels;
+  const values = labels.map((label) => roundTwo(Math.max(totals[label], 0)));
+  const netValues = labels.map((label) => roundTwo(totals[label]));
   const hasVolume = values.some((value) => value > 0);
 
   return new Chart(els.truckVolumeChart, {
@@ -413,6 +469,7 @@ function createTruckVolumeChart(events) {
       datasets: [
         {
           data: hasVolume ? values : [1],
+          netValues: hasVolume ? netValues : [0],
           backgroundColor: hasVolume ? labels.map((_, index) => colorAt(index)) : ["rgba(148, 163, 184, 0.58)"],
           borderColor: "#ffffff",
           borderWidth: 3,
@@ -436,13 +493,15 @@ function createDailyTruckChart(events) {
           roundTwo(
             events
               .filter((event) => (event.date || "Sin fecha") === date && event.plate === plate)
-              .reduce((sum, event) => sum + chartVolume(event), 0)
+              .reduce((sum, event) => sum + signedVolume(event), 0)
           )
         ),
         backgroundColor: colorAt(index),
         borderWidth: 0,
-        borderRadius: 10,
-        borderSkipped: false
+        borderRadius: stackedBarRadius,
+        borderSkipped: false,
+        barPercentage: 0.74,
+        categoryPercentage: 0.68
       }))
     : [
         {
@@ -458,6 +517,41 @@ function createDailyTruckChart(events) {
     data: { labels, datasets },
     options: barChartOptions()
   });
+}
+
+function stackedBarRadius(context) {
+  const value = Number(context.raw) || 0;
+  if (value === 0) return 0;
+
+  const radius = 7;
+  const sign = value > 0 ? 1 : -1;
+  const activeDatasetIndexes = context.chart.data.datasets
+    .map((dataset, index) => ({ index, value: Number(dataset.data[context.dataIndex]) || 0 }))
+    .filter((item) => (sign > 0 ? item.value > 0 : item.value < 0))
+    .map((item) => item.index);
+
+  if (!activeDatasetIndexes.length) return 0;
+
+  const firstIndex = activeDatasetIndexes[0];
+  const lastIndex = activeDatasetIndexes[activeDatasetIndexes.length - 1];
+  const isFirst = context.datasetIndex === firstIndex;
+  const isLast = context.datasetIndex === lastIndex;
+
+  if (sign > 0) {
+    return {
+      topLeft: isLast ? radius : 0,
+      topRight: isLast ? radius : 0,
+      bottomLeft: isFirst ? radius : 0,
+      bottomRight: isFirst ? radius : 0
+    };
+  }
+
+  return {
+    topLeft: isFirst ? radius : 0,
+    topRight: isFirst ? radius : 0,
+    bottomLeft: isLast ? radius : 0,
+    bottomRight: isLast ? radius : 0
+  };
 }
 
 function basePluginOptions() {
@@ -491,7 +585,11 @@ function lineChartOptions() {
   const plugins = basePluginOptions();
   plugins.legend.display = false;
   plugins.tooltip.callbacks = {
-    label: (context) => "Acumulado: " + formatChartNumber(context.parsed.y) + " m³"
+    title: (items) => {
+      const item = items && items.length ? items[0] : null;
+      return item && item.dataset.eventLabels ? item.dataset.eventLabels[item.dataIndex] : "";
+    },
+    label: (context) => "Acumulado neto: " + formatSignedVolume(context.parsed.y)
   };
 
   return {
@@ -531,7 +629,10 @@ function doughnutChartOptions(hasVolume) {
   plugins.legend.position = "bottom";
   plugins.tooltip.enabled = hasVolume;
   plugins.tooltip.callbacks = {
-    label: (context) => context.label + ": " + formatChartNumber(context.parsed) + " m³"
+    label: (context) => {
+      const netValue = context.dataset.netValues ? context.dataset.netValues[context.dataIndex] : context.parsed;
+      return context.label + ": " + formatSignedVolume(netValue);
+    }
   };
 
   return {
@@ -547,7 +648,7 @@ function barChartOptions() {
   const plugins = basePluginOptions();
   plugins.legend.position = "top";
   plugins.tooltip.callbacks = {
-    label: (context) => context.dataset.label + ": " + formatChartNumber(context.parsed.y) + " m³"
+    label: (context) => context.dataset.label + ": " + formatSignedVolume(context.parsed.y)
   };
 
   return {
@@ -590,6 +691,7 @@ function normalizeEvent(rawEvent) {
     truck_code: fallbackText(event.truck_code, ""),
     load: fallbackText(event.load, "Sin dato"),
     direction: fallbackText(event.direction, "Sin dato"),
+    direction_key: normalizeDirectionKey(event.direction),
     volume_m3: parseVolume(event.volume_m3),
     observation: fallbackText(event.observation, "-"),
     alert_label: fallbackText(event.alert_label, ALERT_LABELS[alertLevel]),
@@ -600,6 +702,25 @@ function normalizeEvent(rawEvent) {
 function normalizeAlertLevel(level) {
   const normalized = fallbackText(level, "unknown").toLowerCase();
   return ALERT_ORDER.includes(normalized) ? normalized : "unknown";
+}
+
+function normalizeDirectionKey(direction) {
+  const normalized = normalizeTextKey(direction);
+  if (normalized === "ida" || normalized.includes("sentido ida")) {
+    return "ida";
+  }
+  if (normalized === "vuelta" || normalized.includes("sentido vuelta")) {
+    return "vuelta";
+  }
+  return "other";
+}
+
+function normalizeTextKey(value) {
+  return fallbackText(value, "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 }
 
 function normalizeDate(date) {
@@ -620,14 +741,30 @@ function parseVolume(value) {
   return Number.isFinite(volume) ? volume : null;
 }
 
-function chartVolume(event) {
+function rawVolume(event) {
   return Number.isFinite(event.volume_m3) ? event.volume_m3 : 0;
 }
 
-function groupTotals(events, keyGetter) {
+function signedVolume(event) {
+  return isVueltaDirection(event) ? -rawVolume(event) : rawVolume(event);
+}
+
+function isIdaDirection(event) {
+  return event.direction_key === "ida";
+}
+
+function isVueltaDirection(event) {
+  return event.direction_key === "vuelta";
+}
+
+function isAlertEvent(event) {
+  return event.alert_level !== "ok";
+}
+
+function groupTotals(events, keyGetter, valueGetter = rawVolume) {
   return events.reduce((totals, event) => {
     const key = fallbackText(keyGetter(event), "Sin dato");
-    totals[key] = (totals[key] || 0) + chartVolume(event);
+    totals[key] = (totals[key] || 0) + valueGetter(event);
     return totals;
   }, {});
 }
@@ -679,8 +816,8 @@ function formatDisplayTime(value) {
   return value || "Sin dato";
 }
 
-function shortDateTime(event) {
-  const date = event.date ? formatDisplayDate(event.date).slice(0, 5) : "Sin fecha";
+function fullDateTime(event) {
+  const date = event.date ? formatDisplayDate(event.date) : "Sin fecha";
   const time = event.time ? event.time.slice(0, 5) : "Sin hora";
   return date + " " + time;
 }
@@ -702,6 +839,17 @@ function formatVolume(value) {
 
 function formatVolumeCompact(value) {
   return formatChartNumber(value) + " m³";
+}
+
+function formatSignedVolume(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return "0 m³";
+  }
+  if (Math.abs(number) < 0.005) {
+    return "0 m³";
+  }
+  return (number < 0 ? "-" : "") + formatChartNumber(Math.abs(number)) + " m³";
 }
 
 function formatChartNumber(value) {
